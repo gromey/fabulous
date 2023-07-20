@@ -3,6 +3,7 @@ package hydrogen
 import (
 	"errors"
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -33,7 +34,7 @@ func (e *engine) Fields(v any, omitempty bool, fieldNames ...string) (Fields, er
 	}
 
 	fs := s.cachedFields(rv.Type())
-	return fs.capture(rv, omitempty, fieldNames...), nil
+	return fs.capture(rv, omitempty, "", fieldNames...), nil
 }
 
 type state struct {
@@ -110,7 +111,11 @@ func (e *engine) typeFields(t reflect.Type) structFields {
 				continue
 			}
 
-			f.name = tag
+			if n := strings.IndexByte(tag, ','); n < 0 && len(tag) > 0 {
+				f.name = strings.ReplaceAll(tag, " ", "_")
+			} else if n > 0 {
+				f.name = strings.ReplaceAll(tag[:n], " ", "_")
+			}
 		}
 
 		if ft.Kind() == reflect.Struct {
@@ -126,7 +131,7 @@ func (e *engine) typeFields(t reflect.Type) structFields {
 	return fs
 }
 
-func (f *structFields) capture(v reflect.Value, omitempty bool, fieldNames ...string) Fields {
+func (f *structFields) capture(v reflect.Value, omitempty bool, parent string, fieldNames ...string) Fields {
 	fs := make(Fields, 0, len(*f))
 
 	for _, fld := range *f {
@@ -140,17 +145,19 @@ func (f *structFields) capture(v reflect.Value, omitempty bool, fieldNames ...st
 			continue
 		}
 
+		name := parent + fld.name
+
 		if fld.embedded != nil {
-			fs = append(fs, fld.embedded.capture(rv, omitempty, fieldNames...)...)
+			fs = append(fs, fld.embedded.capture(rv, omitempty, name+"_", fieldNames...)...)
 			continue
 		}
 
-		if len(fieldNames) != 0 && ignore(fld.name, fieldNames...) {
+		if len(fieldNames) != 0 && ignore(name, fieldNames...) {
 			continue
 		}
 
 		fs = append(fs, Field{
-			Name:  fld.name,
+			Name:  name,
 			Value: v.Field(fld.index).Interface(),
 			Addr:  v.Field(fld.index).Addr().Interface(),
 		})

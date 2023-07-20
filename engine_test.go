@@ -35,6 +35,11 @@ type pointer struct {
 	A *int
 }
 
+type deepEmbed struct {
+	Foo nested `tag:"foo"`
+	Bar string `tag:"bar"`
+}
+
 var (
 	ns = 12345
 
@@ -42,6 +47,7 @@ var (
 	s2 = nested{A: "foo", B: 0, C: 3.14, simple: s1, S: &s1}
 	s3 = skip{A: "foo", B: 0, C: 3.14, simple: &s1, S: s1}
 	s4 = pointer{}
+	s5 = deepEmbed{Foo: s2, Bar: "text"}
 )
 
 func TestEngine_Fields(t *testing.T) {
@@ -110,14 +116,14 @@ func TestEngine_Fields(t *testing.T) {
 				{Name: "A", Value: "foo", Addr: &s2.A},
 				{Name: "B", Value: 0, Addr: &s2.B},
 				{Name: "name", Value: 3.14, Addr: &s2.C},
-				{Name: "A", Value: "test", Addr: &s2.simple.A},
-				{Name: "B", Value: 0, Addr: &s2.simple.B},
-				{Name: "C", Value: 3.14, Addr: &s2.simple.C},
-				{Name: "D", Value: 28, Addr: &s2.simple.D},
-				{Name: "A", Value: "test", Addr: &s2.S.A},
-				{Name: "B", Value: 0, Addr: &s2.S.B},
-				{Name: "C", Value: 3.14, Addr: &s2.S.C},
-				{Name: "D", Value: 28, Addr: &s2.S.D},
+				{Name: "simple_A", Value: "test", Addr: &s2.simple.A},
+				{Name: "simple_B", Value: 0, Addr: &s2.simple.B},
+				{Name: "simple_C", Value: 3.14, Addr: &s2.simple.C},
+				{Name: "simple_D", Value: 28, Addr: &s2.simple.D},
+				{Name: "S_A", Value: "test", Addr: &s2.S.A},
+				{Name: "S_B", Value: 0, Addr: &s2.S.B},
+				{Name: "S_C", Value: 3.14, Addr: &s2.S.C},
+				{Name: "S_D", Value: 28, Addr: &s2.S.D},
 			},
 		},
 		{
@@ -127,36 +133,36 @@ func TestEngine_Fields(t *testing.T) {
 			expect: Fields{
 				{Name: "A", Value: "foo", Addr: &s2.A},
 				{Name: "name", Value: 3.14, Addr: &s2.C},
-				{Name: "A", Value: "test", Addr: &s2.simple.A},
-				{Name: "C", Value: 3.14, Addr: &s2.simple.C},
-				{Name: "D", Value: 28, Addr: &s2.simple.D},
-				{Name: "A", Value: "test", Addr: &s2.S.A},
-				{Name: "C", Value: 3.14, Addr: &s2.S.C},
-				{Name: "D", Value: 28, Addr: &s2.S.D},
+				{Name: "simple_A", Value: "test", Addr: &s2.simple.A},
+				{Name: "simple_C", Value: 3.14, Addr: &s2.simple.C},
+				{Name: "simple_D", Value: 28, Addr: &s2.simple.D},
+				{Name: "S_A", Value: "test", Addr: &s2.S.A},
+				{Name: "S_C", Value: 3.14, Addr: &s2.S.C},
+				{Name: "S_D", Value: 28, Addr: &s2.S.D},
 			},
 		},
 		{
 			name:   "Selected fields with nested",
 			input:  &s2,
-			fields: []string{"A", "B"},
+			fields: []string{"A", "B", "simple_A", "simple_B", "S_A", "S_B"},
 			expect: Fields{
 				{Name: "A", Value: "foo", Addr: &s2.A},
 				{Name: "B", Value: 0, Addr: &s2.B},
-				{Name: "A", Value: "test", Addr: &s2.simple.A},
-				{Name: "B", Value: 0, Addr: &s2.simple.B},
-				{Name: "A", Value: "test", Addr: &s2.S.A},
-				{Name: "B", Value: 0, Addr: &s2.S.B},
+				{Name: "simple_A", Value: "test", Addr: &s2.simple.A},
+				{Name: "simple_B", Value: 0, Addr: &s2.simple.B},
+				{Name: "S_A", Value: "test", Addr: &s2.S.A},
+				{Name: "S_B", Value: 0, Addr: &s2.S.B},
 			},
 		},
 		{
 			name:      "Selected fields with nested with omitempty",
 			input:     &s2,
 			omitempty: true,
-			fields:    []string{"A", "B"},
+			fields:    []string{"A", "B", "simple_A", "simple_B", "S_A", "S_B"},
 			expect: Fields{
 				{Name: "A", Value: "foo", Addr: &s2.A},
-				{Name: "A", Value: "test", Addr: &s2.simple.A},
-				{Name: "A", Value: "test", Addr: &s2.S.A},
+				{Name: "simple_A", Value: "test", Addr: &s2.simple.A},
+				{Name: "S_A", Value: "test", Addr: &s2.S.A},
 			},
 		},
 		{
@@ -164,14 +170,14 @@ func TestEngine_Fields(t *testing.T) {
 			input: &s3,
 			expect: Fields{
 				{Name: "C", Value: 3.14, Addr: &s3.C},
-				{Name: "A", Value: "test", Addr: &s3.simple.A},
-				{Name: "B", Value: 0, Addr: &s3.simple.B},
-				{Name: "C", Value: 3.14, Addr: &s3.simple.C},
-				{Name: "D", Value: 28, Addr: &s3.simple.D},
-				{Name: "A", Value: "test", Addr: &s3.S.A},
-				{Name: "B", Value: 0, Addr: &s3.S.B},
-				{Name: "C", Value: 3.14, Addr: &s3.S.C},
-				{Name: "D", Value: 28, Addr: &s3.S.D},
+				{Name: "simple_A", Value: "test", Addr: &s3.simple.A},
+				{Name: "simple_B", Value: 0, Addr: &s3.simple.B},
+				{Name: "simple_C", Value: 3.14, Addr: &s3.simple.C},
+				{Name: "simple_D", Value: 28, Addr: &s3.simple.D},
+				{Name: "S_A", Value: "test", Addr: &s3.S.A},
+				{Name: "S_B", Value: 0, Addr: &s3.S.B},
+				{Name: "S_C", Value: 3.14, Addr: &s3.S.C},
+				{Name: "S_D", Value: 28, Addr: &s3.S.D},
 			},
 		},
 		{
@@ -180,34 +186,34 @@ func TestEngine_Fields(t *testing.T) {
 			omitempty: true,
 			expect: Fields{
 				{Name: "C", Value: 3.14, Addr: &s3.C},
-				{Name: "A", Value: "test", Addr: &s3.simple.A},
-				{Name: "C", Value: 3.14, Addr: &s3.simple.C},
-				{Name: "D", Value: 28, Addr: &s3.simple.D},
-				{Name: "A", Value: "test", Addr: &s3.S.A},
-				{Name: "C", Value: 3.14, Addr: &s3.S.C},
-				{Name: "D", Value: 28, Addr: &s3.S.D},
+				{Name: "simple_A", Value: "test", Addr: &s3.simple.A},
+				{Name: "simple_C", Value: 3.14, Addr: &s3.simple.C},
+				{Name: "simple_D", Value: 28, Addr: &s3.simple.D},
+				{Name: "S_A", Value: "test", Addr: &s3.S.A},
+				{Name: "S_C", Value: 3.14, Addr: &s3.S.C},
+				{Name: "S_D", Value: 28, Addr: &s3.S.D},
 			},
 		},
 		{
 			name:   "Selected fields with skip",
 			input:  &s3,
-			fields: []string{"A", "C"},
+			fields: []string{"A", "C", "simple_A", "simple_C", "S_A", "S_C"},
 			expect: Fields{
 				{Name: "C", Value: 3.14, Addr: &s3.C},
-				{Name: "A", Value: "test", Addr: &s3.simple.A},
-				{Name: "C", Value: 3.14, Addr: &s3.simple.C},
-				{Name: "A", Value: "test", Addr: &s3.S.A},
-				{Name: "C", Value: 3.14, Addr: &s3.S.C},
+				{Name: "simple_A", Value: "test", Addr: &s3.simple.A},
+				{Name: "simple_C", Value: 3.14, Addr: &s3.simple.C},
+				{Name: "S_A", Value: "test", Addr: &s3.S.A},
+				{Name: "S_C", Value: 3.14, Addr: &s3.S.C},
 			},
 		},
 		{
 			name:      "Selected fields with skip with omitempty",
 			input:     &s3,
 			omitempty: true,
-			fields:    []string{"A", "B"},
+			fields:    []string{"A", "B", "simple_A", "simple_B", "S_A", "S_B"},
 			expect: Fields{
-				{Name: "A", Value: "test", Addr: &s3.simple.A},
-				{Name: "A", Value: "test", Addr: &s3.S.A},
+				{Name: "simple_A", Value: "test", Addr: &s3.simple.A},
+				{Name: "S_A", Value: "test", Addr: &s3.S.A},
 			},
 		},
 		{
@@ -222,6 +228,24 @@ func TestEngine_Fields(t *testing.T) {
 			input:     &s4,
 			omitempty: true,
 			expect:    Fields{},
+		},
+		{
+			name:  "Deep embedding",
+			input: &s5,
+			expect: Fields{
+				{Name: "foo_A", Value: "foo", Addr: &s5.Foo.A},
+				{Name: "foo_B", Value: 0, Addr: &s5.Foo.B},
+				{Name: "foo_name", Value: 3.14, Addr: &s5.Foo.C},
+				{Name: "foo_simple_A", Value: "test", Addr: &s5.Foo.simple.A},
+				{Name: "foo_simple_B", Value: 0, Addr: &s5.Foo.simple.B},
+				{Name: "foo_simple_C", Value: 3.14, Addr: &s5.Foo.simple.C},
+				{Name: "foo_simple_D", Value: 28, Addr: &s5.Foo.simple.D},
+				{Name: "foo_S_A", Value: "test", Addr: &s5.Foo.S.A},
+				{Name: "foo_S_B", Value: 0, Addr: &s5.Foo.S.B},
+				{Name: "foo_S_C", Value: 3.14, Addr: &s5.Foo.S.C},
+				{Name: "foo_S_D", Value: 28, Addr: &s5.Foo.S.D},
+				{Name: "bar", Value: "text", Addr: &s5.Bar},
+			},
 		},
 	}
 
@@ -255,7 +279,7 @@ func TestFields_Names(t *testing.T) {
 		{
 			name:   "Get names",
 			input:  &s2,
-			expect: []string{"A", "B", "name", "A", "B", "C", "D", "A", "B", "C", "D"},
+			expect: []string{"A", "B", "name", "simple_A", "simple_B", "simple_C", "simple_D", "S_A", "S_B", "S_C", "S_D"},
 		},
 	}
 
