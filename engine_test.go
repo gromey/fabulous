@@ -51,28 +51,26 @@ var (
 )
 
 func TestEngine_Fields(t *testing.T) {
-	type ts struct {
+	tests := []struct {
 		name      string
 		input     any
 		omitempty bool
 		fields    []string
 		expect    Fields
 		err       error
-	}
-
-	tests := []ts{
+	}{
 		{
-			name:  "Not a pointer",
+			name:  "not a pointer",
 			input: s1,
 			err:   errors.New("the input value is not a pointer"),
 		},
 		{
-			name:  "Not a struct",
+			name:  "not a struct",
 			input: &ns,
 			err:   errors.New("the input value is not a struct"),
 		},
 		{
-			name:  "All fields",
+			name:  "all fields",
 			input: &s1,
 			expect: Fields{
 				{Name: "A", Value: "test", Addr: &s1.A},
@@ -82,7 +80,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:      "All fields with omitempty",
+			name:      "all fields with omitempty",
 			input:     &s1,
 			omitempty: true,
 			expect: Fields{
@@ -92,7 +90,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:   "Selected fields",
+			name:   "selected fields",
 			input:  &s1,
 			fields: []string{"A", "C"},
 			expect: Fields{
@@ -101,7 +99,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:      "Selected fields with omitempty",
+			name:      "selected fields with omitempty",
 			input:     &s1,
 			omitempty: true,
 			fields:    []string{"A", "B"},
@@ -110,7 +108,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:  "All fields with nested",
+			name:  "all fields with nested",
 			input: &s2,
 			expect: Fields{
 				{Name: "A", Value: "foo", Addr: &s2.A},
@@ -127,7 +125,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:      "All fields with nested with omitempty",
+			name:      "all fields with nested with omitempty",
 			input:     &s2,
 			omitempty: true,
 			expect: Fields{
@@ -142,7 +140,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:   "Selected fields with nested",
+			name:   "selected fields with nested",
 			input:  &s2,
 			fields: []string{"A", "B", "simple_A", "simple_B", "S_A", "S_B"},
 			expect: Fields{
@@ -155,7 +153,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:      "Selected fields with nested with omitempty",
+			name:      "selected fields with nested with omitempty",
 			input:     &s2,
 			omitempty: true,
 			fields:    []string{"A", "B", "simple_A", "simple_B", "S_A", "S_B"},
@@ -166,7 +164,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:  "All fields with skip",
+			name:  "all fields with skip",
 			input: &s3,
 			expect: Fields{
 				{Name: "C", Value: 3.14, Addr: &s3.C},
@@ -181,7 +179,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:      "All fields with skip with omitempty",
+			name:      "all fields with skip with omitempty",
 			input:     &s3,
 			omitempty: true,
 			expect: Fields{
@@ -195,7 +193,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:   "Selected fields with skip",
+			name:   "selected fields with skip",
 			input:  &s3,
 			fields: []string{"A", "C", "simple_A", "simple_C", "S_A", "S_C"},
 			expect: Fields{
@@ -207,7 +205,7 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:      "Selected fields with skip with omitempty",
+			name:      "selected fields with skip with omitempty",
 			input:     &s3,
 			omitempty: true,
 			fields:    []string{"A", "B", "simple_A", "simple_B", "S_A", "S_B"},
@@ -217,20 +215,20 @@ func TestEngine_Fields(t *testing.T) {
 			},
 		},
 		{
-			name:  "Nil pointer field",
+			name:  "nil pointer field",
 			input: &s4,
 			expect: Fields{
 				{Name: "A", Value: (*int)(nil), Addr: &s4.A},
 			},
 		},
 		{
-			name:      "Nil pointer field",
+			name:      "nil pointer field",
 			input:     &s4,
 			omitempty: true,
 			expect:    Fields{},
 		},
 		{
-			name:  "Deep embedding",
+			name:  "deep embedding",
 			input: &s5,
 			expect: Fields{
 				{Name: "foo_A", Value: "foo", Addr: &s5.Foo.A},
@@ -269,15 +267,13 @@ func TestEngine_Fields(t *testing.T) {
 }
 
 func TestFields_Names(t *testing.T) {
-	type ts struct {
+	tests := []struct {
 		name   string
 		input  any
 		expect []string
-	}
-
-	tests := []ts{
+	}{
 		{
-			name:   "Get names",
+			name:   "get names",
 			input:  &s2,
 			expect: []string{"A", "B", "name", "simple_A", "simple_B", "simple_C", "simple_D", "S_A", "S_B", "S_C", "S_D"},
 		},
@@ -295,15 +291,13 @@ func TestFields_Names(t *testing.T) {
 }
 
 func TestFields_Values(t *testing.T) {
-	type ts struct {
+	tests := []struct {
 		name   string
 		input  any
 		expect []any
-	}
-
-	tests := []ts{
+	}{
 		{
-			name:   "Get values",
+			name:   "get values",
 			input:  &s2,
 			expect: []any{"foo", 0, 3.14, "test", 0, 3.14, 28, "test", 0, 3.14, 28},
 		},
@@ -321,15 +315,13 @@ func TestFields_Values(t *testing.T) {
 }
 
 func TestFields_Pointers(t *testing.T) {
-	type ts struct {
+	tests := []struct {
 		name   string
 		input  any
 		expect []any
-	}
-
-	tests := []ts{
+	}{
 		{
-			name:   "Get pointers",
+			name:   "get pointers",
 			input:  &s2,
 			expect: []any{&s2.A, &s2.B, &s2.C, &s2.simple.A, &s2.simple.B, &s2.simple.C, &s2.simple.D, &s2.S.A, &s2.S.B, &s2.S.C, &s2.S.D},
 		},

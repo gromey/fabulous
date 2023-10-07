@@ -29,7 +29,7 @@ func (e *engine) Fields(v any, omitempty bool, fieldNames ...string) (Fields, er
 	}
 
 	var err error
-	if rv, err = dereference(rv); err != nil {
+	if rv, err = valueFromPtr(rv); err != nil {
 		return nil, err
 	}
 
