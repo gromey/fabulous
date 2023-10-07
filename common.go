@@ -5,9 +5,9 @@ import (
 	"reflect"
 )
 
-func dereference(rv reflect.Value) (reflect.Value, error) {
+func valueFromPtr(rv reflect.Value) (reflect.Value, error) {
 	if rv.Kind() == reflect.Pointer {
-		return dereference(rv.Elem())
+		return valueFromPtr(rv.Elem())
 	}
 	if rv.Kind() != reflect.Struct {
 		return rv, errors.New("the input value is not a struct")
