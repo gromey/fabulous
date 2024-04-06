@@ -36,6 +36,7 @@ func isEmptyValue(v reflect.Value) bool {
 		return v.IsZero()
 	case reflect.Interface, reflect.Pointer:
 		return v.IsNil()
+	default:
+		return !v.IsValid()
 	}
-	return !v.IsValid()
 }
